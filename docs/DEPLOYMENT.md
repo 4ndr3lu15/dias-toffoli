@@ -26,20 +26,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install bun
+RUN npm install -g bun
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json bun.lockb ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build for production
-RUN pnpm build
+RUN bun run build
 
 # Stage 2: Serve
 FROM nginx:alpine AS runner
@@ -140,7 +140,7 @@ services:
       - /app/node_modules
     ports:
       - "5173:5173"
-    command: sh -c "corepack enable && pnpm install && pnpm dev --host"
+    command: sh -c "npm install -g bun && bun install && bun run dev --host"
     profiles:
       - dev
 ```
@@ -293,7 +293,7 @@ For platforms like Vercel, Netlify, or GitHub Pages:
 
 ```powershell
 # Build locally
-pnpm build
+bun run build
 
 # Deploy dist folder to your hosting provider
 ```

@@ -27,9 +27,9 @@ docker compose up -d
 ### Local Development
 
 ```bash
-# Prerequisites: Node.js 20+, pnpm
-pnpm install
-pnpm dev
+# Prerequisites: Node.js 20+, bun
+bun install
+bun run dev
 # Open http://localhost:5173
 ```
 

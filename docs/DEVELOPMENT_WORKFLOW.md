@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - **Node.js**: 20.x LTS (recommend using `nvm` or `fnm`)
-- **pnpm**: Package manager (`npm install -g pnpm`)
+- **bun**: Package manager & runtime (https://bun.sh)
 - **VS Code**: With recommended extensions
 - **Webcam**: For testing hand tracking
 - **Modern Browser**: Chrome or Edge recommended
@@ -16,10 +16,10 @@ git clone https://github.com/yourorg/dias-toffoli.git
 cd dias-toffoli
 
 # Install dependencies
-pnpm install
+bun install
 
 # Start development server
-pnpm dev
+bun run dev
 ```
 
 The app will be available at `http://localhost:5173`
@@ -28,31 +28,31 @@ The app will be available at `http://localhost:5173`
 
 ```powershell
 # Development server with hot reload
-pnpm dev
+bun run dev
 
 # Type checking
-pnpm type-check
+bun run type-check
 
 # Linting
-pnpm lint
-pnpm lint:fix
+bun run lint
+bun run lint:fix
 
 # Formatting
-pnpm format
+bun run format
 
 # Run tests
-pnpm test
-pnpm test:watch
-pnpm test:coverage
+bun test
+bun test --watch
+bun test --coverage
 
 # Build for production
-pnpm build
+bun run build
 
 # Preview production build
-pnpm preview
+bun run preview
 
 # Run all checks (before commit)
-pnpm check-all
+bun run check-all
 ```
 
 ## Project Scripts (package.json)
@@ -70,7 +70,7 @@ pnpm check-all
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "check-all": "pnpm type-check && pnpm lint && pnpm test"
+    "check-all": "bun run type-check && bun run lint && bun test"
   }
 }
 ```
@@ -163,7 +163,7 @@ chore: upgrade to Tone.js 15
 
 1. Create feature branch from `main`
 2. Make changes with tests
-3. Run `pnpm check-all`
+3. Run `bun run check-all`
 4. Push and create PR
 5. Wait for CI checks
 6. Request review
@@ -348,7 +348,7 @@ Create `.vscode/extensions.json`:
 
 ### "Types not found"
 
-- Run `pnpm type-check` for details
+- Run `bun run type-check` for details
 - Check import paths
 - Ensure `tsconfig.json` paths are correct
 

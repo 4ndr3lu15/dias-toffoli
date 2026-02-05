@@ -294,7 +294,7 @@ describe('PositionController', () => {
 5. ❌ Hardcode configuration values
 6. ❌ Skip error handling
 7. ❌ Write tests without assertions
-8. ❌ Commit without running `npm run lint`
+8. ❌ Commit without running `bun run lint`
 
 ## AI Assistant Checklist
 
