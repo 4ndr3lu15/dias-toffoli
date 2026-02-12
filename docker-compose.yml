@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  dias-toffoli:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - '8080:80'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Development with hot reload
+  dias-toffoli-dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - '5173:5173'
+    command: sh -c "npm install -g bun && bun install && bun run dev --host"
+    profiles:
+      - dev
