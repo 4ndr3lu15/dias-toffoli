@@ -88,15 +88,18 @@ export class WaveformVisualizer implements IGenerator {
   /**
    * Start rendering the waveform.
    */
-  async start(): Promise<void> {
-    if (this._isRunning) return;
+  start(): Promise<void> {
+    if (this._isRunning) return Promise.resolve();
 
     if (!this.canvas || !this.ctx) {
-      throw new Error(`[${this.name}] Canvas not set. Call setCanvas() before start().`);
+      return Promise.reject(
+        new Error(`[${this.name}] Canvas not set. Call setCanvas() before start().`)
+      );
     }
 
     this._isRunning = true;
     this.animate();
+    return Promise.resolve();
   }
 
   /**

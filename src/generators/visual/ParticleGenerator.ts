@@ -93,16 +93,19 @@ export class ParticleGenerator implements IGenerator {
    * Start the particle system.
    * Initializes particles and begins the animation loop.
    */
-  async start(): Promise<void> {
-    if (this._isRunning) return;
+  start(): Promise<void> {
+    if (this._isRunning) return Promise.resolve();
 
     if (!this.canvas || !this.ctx) {
-      throw new Error(`[${this.name}] Canvas not set. Call setCanvas() before start().`);
+      return Promise.reject(
+        new Error(`[${this.name}] Canvas not set. Call setCanvas() before start().`)
+      );
     }
 
     this.initializeParticles();
     this._isRunning = true;
     this.animate();
+    return Promise.resolve();
   }
 
   /**

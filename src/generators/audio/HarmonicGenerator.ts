@@ -168,7 +168,7 @@ export class HarmonicGenerator implements IGenerator {
     const { fingerMapping, extendedAmplitude, curledAmplitude } = this.config;
     const fingers = hand.fingers;
 
-    const amplitudes: number[] = new Array(this.config.harmonicCount).fill(curledAmplitude);
+    const amplitudes: number[] = new Array<number>(this.config.harmonicCount).fill(curledAmplitude);
 
     // Map each finger to its corresponding harmonic
     const fingerStates: [boolean, number][] = [

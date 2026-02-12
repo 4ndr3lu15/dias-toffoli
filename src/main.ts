@@ -1,13 +1,16 @@
 /**
  * Dias-Toffoli - Main Application Entry Point
  *
- * Initializes and orchestrates the hand tracking application.
+ * Initializes and orchestrates the hand tracking application
+ * with audio and visual generators.
  */
 
 import { HandTracker } from './core';
 import { CameraPreview, DebugOverlay } from './ui';
 import { ControllerManager } from './controllers';
-import type { ControlState } from './types/control.types';
+import { ControlPanel } from './ui/ControlPanel';
+import { SynthGenerator, HarmonicGenerator, DrumGenerator } from './generators';
+import { ParticleGenerator, TrailGenerator, WaveformVisualizer } from './generators';
 
 /**
  * Application state.
@@ -32,6 +35,15 @@ class App {
   private handTracker: HandTracker;
   private debugOverlay: DebugOverlay;
   private controllerManager: ControllerManager;
+  private controlPanel: ControlPanel;
+
+  // Generators
+  private synthGenerator: SynthGenerator;
+  private harmonicGenerator: HarmonicGenerator;
+  private drumGenerator: DrumGenerator;
+  private particleGenerator: ParticleGenerator;
+  private trailGenerator: TrailGenerator;
+  private waveformVisualizer: WaveformVisualizer;
 
   // DOM elements
   private statusEl: HTMLElement | null = null;
@@ -39,17 +51,26 @@ class App {
   private stopBtn: HTMLButtonElement | null = null;
   private videoEl: HTMLVideoElement | null = null;
   private canvasEl: HTMLCanvasElement | null = null;
+  private visualCanvasEl: HTMLCanvasElement | null = null;
   private fpsEl: HTMLElement | null = null;
   private loadingOverlay: HTMLElement | null = null;
   private loadingText: HTMLElement | null = null;
   private progressFill: HTMLElement | null = null;
-  private gestureEl: HTMLElement | null = null;
 
   constructor() {
     this.cameraPreview = new CameraPreview();
     this.handTracker = new HandTracker();
     this.debugOverlay = new DebugOverlay();
     this.controllerManager = new ControllerManager();
+    this.controlPanel = new ControlPanel();
+
+    // Create generators
+    this.synthGenerator = new SynthGenerator();
+    this.harmonicGenerator = new HarmonicGenerator();
+    this.drumGenerator = new DrumGenerator();
+    this.particleGenerator = new ParticleGenerator();
+    this.trailGenerator = new TrailGenerator();
+    this.waveformVisualizer = new WaveformVisualizer();
   }
 
   /**
@@ -62,17 +83,37 @@ class App {
     this.stopBtn = document.getElementById('stopBtn') as HTMLButtonElement;
     this.videoEl = document.getElementById('webcam') as HTMLVideoElement;
     this.canvasEl = document.getElementById('overlay') as HTMLCanvasElement;
+    this.visualCanvasEl = document.getElementById('visualCanvas') as HTMLCanvasElement;
     this.fpsEl = document.getElementById('fps');
     this.loadingOverlay = document.getElementById('loadingOverlay');
     this.loadingText = document.getElementById('loadingText');
     this.progressFill = document.getElementById('progressFill');
-    this.gestureEl = document.getElementById('gesture');
 
     // Validate required elements
-    if (!this.videoEl || !this.canvasEl) {
+    if (!this.videoEl || !this.canvasEl || !this.visualCanvasEl) {
       this.setError('Required DOM elements not found');
       return;
     }
+
+    // Set visual canvas on visual generators
+    this.particleGenerator.setCanvas(this.visualCanvasEl);
+    this.trailGenerator.setCanvas(this.visualCanvasEl);
+    this.waveformVisualizer.setCanvas(this.visualCanvasEl);
+
+    // Register generators with control panel
+    this.controlPanel.registerAudioGenerators({
+      synth: this.synthGenerator,
+      harmonic: this.harmonicGenerator,
+      drum: this.drumGenerator,
+    });
+    this.controlPanel.registerVisualGenerators({
+      particles: this.particleGenerator,
+      trails: this.trailGenerator,
+      waveform: this.waveformVisualizer,
+    });
+
+    // Initialize control panel DOM bindings
+    this.controlPanel.initialize();
 
     // Set up button handlers
     this.setupEventListeners();
@@ -130,7 +171,7 @@ class App {
    * Start tracking.
    */
   async start(): Promise<void> {
-    if (this.state.isTracking || !this.videoEl || !this.canvasEl) return;
+    if (this.state.isTracking || !this.videoEl || !this.canvasEl || !this.visualCanvasEl) return;
 
     try {
       this.setButtonsEnabled(false, false);
@@ -144,6 +185,10 @@ class App {
       // Set canvas dimensions to match video
       const { width, height } = this.cameraPreview.getDimensions();
       this.debugOverlay.setDimensions(width, height);
+
+      // Set visual canvas dimensions to match
+      this.visualCanvasEl.width = width;
+      this.visualCanvasEl.height = height;
 
       // Initialize debug overlay
       this.debugOverlay.initialize(this.canvasEl, this.fpsEl ?? undefined);
@@ -161,10 +206,13 @@ class App {
       // Start the controller manager with hand tracking data
       this.controllerManager.start(this.handTracker.hands$);
 
-      // Subscribe to control state updates
+      // Give the control panel access to the state stream
+      this.controlPanel.setControllerState(this.controllerManager.state$);
+
+      // Subscribe to control state updates for gesture display
       this.controllerManager.state$.subscribe({
         next: (controlState) => {
-          this.updateControlStateDisplay(controlState);
+          this.controlPanel.updateControlStateDisplay(controlState);
         },
         error: (err) => {
           console.error('Controller error:', err);
@@ -189,6 +237,9 @@ class App {
       this.hideLoading();
       this.updateStatus('Tracking', true);
       this.setButtonsEnabled(false, true);
+
+      // Enable generator toggle buttons now that tracking is active
+      this.controlPanel.enableToggles();
     } catch (error) {
       console.error('Failed to start:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -204,6 +255,9 @@ class App {
   stop(): void {
     if (!this.state.isTracking) return;
 
+    // Disable generators via control panel
+    this.controlPanel.disableToggles();
+
     this.controllerManager.stop();
     this.handTracker.stop();
     this.cameraPreview.stop();
@@ -212,26 +266,6 @@ class App {
     this.state.isTracking = false;
     this.updateStatus('Stopped');
     this.setButtonsEnabled(true, false);
-  }
-
-  /**
-   * Update control state display.
-   */
-  private updateControlStateDisplay(state: ControlState): void {
-    if (!this.gestureEl) return;
-
-    if (state.primaryHand) {
-      const gesture = state.primaryHand.gesture.type;
-      const confidence = Math.round(state.primaryHand.gesture.confidence * 100);
-      const openness = Math.round(state.primaryHand.openness.value * 100);
-      const fingers = state.primaryHand.fingers.extendedCount;
-
-      this.gestureEl.textContent = `Gesture: ${gesture} (${confidence}%) | Openness: ${openness}% | Fingers: ${fingers}`;
-      this.gestureEl.style.display = 'block';
-    } else {
-      this.gestureEl.textContent = 'No hand detected';
-      this.gestureEl.style.display = 'block';
-    }
   }
 
   /**
@@ -274,6 +308,7 @@ class App {
    */
   dispose(): void {
     this.stop();
+    this.controlPanel.dispose();
     this.controllerManager.reset();
     this.handTracker.dispose();
     this.cameraPreview.dispose();

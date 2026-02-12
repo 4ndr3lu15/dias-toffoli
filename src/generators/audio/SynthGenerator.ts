@@ -198,7 +198,7 @@ export class SynthGenerator implements IGenerator {
     this.config = { ...this.config, ...config };
 
     // Recreate synth if waveform or envelope changed
-    if (this.synth && (config.waveform || config.envelope)) {
+    if (this.synth && (config.waveform != null || config.envelope != null)) {
       const wasRunning = this._isRunning;
       this.releaseAll();
 
