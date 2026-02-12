@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dias-Toffoli - Hand Gesture Controller</title>
     <link rel="stylesheet" href="/styles.css" />
-    <script type="module" crossorigin src="/assets/index-QZeJm8tt.js"></script>
+    <script type="module" crossorigin src="/assets/index-1-wy8GH6.js"></script>
   </head>
   <body>
     <div id="app">
@@ -19,12 +19,23 @@
           <video id="webcam" autoplay playsinline></video>
           <canvas id="overlay"></canvas>
           <div class="fps-counter" id="fps">FPS: --</div>
+          
+          <!-- Loading overlay -->
+          <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <p class="loading-text" id="loadingText">Loading...</p>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
         </div>
         
         <div class="controls">
           <button id="startBtn" class="btn btn-primary">Start Tracking</button>
           <button id="stopBtn" class="btn btn-secondary" disabled>Stop</button>
         </div>
+        
+        <div class="gesture-display" id="gesture">No hand detected</div>
       </main>
     </div>
     

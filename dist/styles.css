@@ -172,3 +172,85 @@ body {
   font-size: 0.875rem;
   opacity: 0.9;
 }
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(22, 33, 62, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loading-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Spinner animation */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--accent);
+  border-top-color: var(--highlight);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+/* Progress bar */
+.progress-bar {
+  width: 200px;
+  height: 6px;
+  background-color: var(--accent);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--highlight);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Gesture display */
+.gesture-display {
+  width: 100%;
+  max-width: 800px;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.95rem;
+  text-align: center;
+  color: var(--text-primary);
+  display: none;
+}
+
+.gesture-display.active {
+  display: block;
+}
+

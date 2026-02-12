@@ -8,15 +8,15 @@ This document outlines the technology choices for Dias-Toffoli and the rationale
 
 ### Why TypeScript over Python?
 
-| Aspect | TypeScript | Python |
-|--------|------------|--------|
-| **Runtime Environment** | Browser-native | Requires backend server |
-| **Type Safety** | Compile-time types | Runtime only (with mypy) |
-| **Real-time Audio** | Web Audio API (low latency) | Complex setup (PyAudio, etc.) |
-| **Deployment** | Static files, CDN-ready | Server infrastructure needed |
-| **MediaPipe Support** | First-class browser support | Works but needs OpenCV |
-| **Market Demand** | #1 for web development | Strong for ML/backend |
-| **AI Tooling** | Excellent Copilot support | Excellent Copilot support |
+| Aspect                  | TypeScript                  | Python                        |
+| ----------------------- | --------------------------- | ----------------------------- |
+| **Runtime Environment** | Browser-native              | Requires backend server       |
+| **Type Safety**         | Compile-time types          | Runtime only (with mypy)      |
+| **Real-time Audio**     | Web Audio API (low latency) | Complex setup (PyAudio, etc.) |
+| **Deployment**          | Static files, CDN-ready     | Server infrastructure needed  |
+| **MediaPipe Support**   | First-class browser support | Works but needs OpenCV        |
+| **Market Demand**       | #1 for web development      | Strong for ML/backend         |
+| **AI Tooling**          | Excellent Copilot support   | Excellent Copilot support     |
 
 ### TypeScript Benefits for This Project
 
@@ -33,11 +33,11 @@ This document outlines the technology choices for Dias-Toffoli and the rationale
 ```json
 {
   "dependencies": {
-    "@mediapipe/hands": "^0.4.x",       // Hand tracking ML model
+    "@mediapipe/hands": "^0.4.x", // Hand tracking ML model
     "@mediapipe/camera_utils": "^0.3.x", // Camera access utilities
     "@mediapipe/drawing_utils": "^0.3.x", // Landmark visualization
-    "rxjs": "^7.8.x",                    // Reactive streams
-    "tone": "^14.x"                       // Web Audio synthesis library
+    "rxjs": "^7.8.x", // Reactive streams
+    "tone": "^15.x" // Web Audio synthesis library
   }
 }
 ```
@@ -47,12 +47,12 @@ This document outlines the technology choices for Dias-Toffoli and the rationale
 ```json
 {
   "devDependencies": {
-    "typescript": "^5.x",          // Language compiler
-    "vite": "^5.x",                // Build tool and dev server
-    "vitest": "^1.x",              // Testing framework
-    "@types/node": "^20.x",        // Node.js types
-    "eslint": "^8.x",              // Code linting
-    "prettier": "^3.x"             // Code formatting
+    "typescript": "^5.x", // Language compiler
+    "vite": "^5.x", // Build tool and dev server
+    "vitest": "^1.x", // Testing framework
+    "@types/node": "^20.x", // Node.js types
+    "eslint": "^8.x", // Code linting
+    "prettier": "^3.x" // Code formatting
   }
 }
 ```
@@ -64,6 +64,7 @@ This document outlines the technology choices for Dias-Toffoli and the rationale
 **Purpose**: Real-time hand landmark detection from webcam
 
 **Why MediaPipe?**
+
 - Google-maintained, production-ready
 - Runs entirely in browser (WASM + WebGL)
 - 21 landmarks per hand at 30+ FPS
@@ -89,24 +90,24 @@ MediaPipe Hand Landmarks:
 **Purpose**: Stream-based data flow between modules
 
 **Why RxJS?**
+
 - Industry standard for reactive programming
 - Built-in operators for throttling, mapping, combining
 - Automatic subscription cleanup
 - TypeScript-first design
 
 **Key Patterns Used**:
-```typescript
-// Throttle hand tracking to 30 FPS
-handTracker.hands$.pipe(
-  throttleTime(33),
-  map(frame => controller.process(frame)),
-  share()
-)
 
-// Combine multiple controllers
-combineLatest([position$, gesture$, velocity$]).pipe(
-  map(([pos, gest, vel]) => mergeControlStates(pos, gest, vel))
-)
+```typescript
+// ControllerManager subscribes to hand frames and emits ControlState
+controllerManager.start(handTracker.hands$);
+
+// Generators subscribe to the control state stream
+controllerManager.state$
+  .pipe(
+    throttleTime(33) // Limit to ~30 FPS
+  )
+  .subscribe((state) => generator.update(state));
 ```
 
 ### 3. Tone.js
@@ -114,12 +115,14 @@ combineLatest([position$, gesture$, velocity$]).pipe(
 **Purpose**: Audio synthesis and music generation
 
 **Why Tone.js?**
+
 - High-level wrapper around Web Audio API
 - Built-in synthesizers, effects, scheduling
 - Handles browser audio context quirks
 - Musical abstractions (notes, scales, BPM)
 
 **Features Used**:
+
 - `Synth` / `PolySynth` for sound generation
 - `Transport` for timing/scheduling
 - `Scale` for note quantization
@@ -130,6 +133,7 @@ combineLatest([position$, gesture$, velocity$]).pipe(
 **Purpose**: Development server and build tool
 
 **Why Vite?**
+
 - Lightning-fast hot module replacement (HMR)
 - Native ES modules in development
 - Optimized production builds
@@ -141,6 +145,7 @@ combineLatest([position$, gesture$, velocity$]).pipe(
 **Purpose**: Visual output rendering
 
 **Options**:
+
 - **2D Canvas**: Simple particles, shapes, basic effects
 - **WebGL**: High-performance particle systems (10k+ particles)
 - **Three.js**: 3D visualizations (optional future feature)
@@ -148,19 +153,22 @@ combineLatest([position$, gesture$, velocity$]).pipe(
 ## Browser APIs Used
 
 ### Media Devices API
+
 ```typescript
 // Access webcam
-navigator.mediaDevices.getUserMedia({ video: true })
+navigator.mediaDevices.getUserMedia({ video: true });
 ```
 
 ### Web Audio API
+
 ```typescript
 // Create audio context (via Tone.js)
 const synth = new Tone.Synth().toDestination();
-synth.triggerAttackRelease("C4", "8n");
+synth.triggerAttackRelease('C4', '8n');
 ```
 
 ### Canvas API
+
 ```typescript
 // 2D rendering
 const ctx = canvas.getContext('2d');
@@ -168,21 +176,24 @@ ctx.fillRect(x, y, width, height);
 ```
 
 ### Performance API
+
 ```typescript
 // Frame timing
-performance.now()
-requestAnimationFrame(callback)
+performance.now();
+requestAnimationFrame(callback);
 ```
 
 ## Containerization
 
 ### Docker
+
 - **Base Image**: `node:20-alpine` (small footprint)
 - **Build**: Multi-stage build (build → nginx serve)
 - **Serve**: `nginx:alpine` for static files
 - **Port**: 80 (configurable)
 
 ### Why Container?
+
 - Consistent environment across machines
 - One-command deployment: `docker run -p 8080:80 dias-toffoli`
 - Easy CI/CD integration
@@ -190,18 +201,19 @@ requestAnimationFrame(callback)
 
 ## Browser Compatibility
 
-| Feature | Chrome | Firefox | Edge | Safari |
-|---------|--------|---------|------|--------|
-| MediaPipe WASM | ✅ 88+ | ✅ 89+ | ✅ 88+ | ⚠️ 15+ |
-| Web Audio API | ✅ | ✅ | ✅ | ✅ |
-| ES Modules | ✅ | ✅ | ✅ | ✅ |
-| getUserMedia | ✅ | ✅ | ✅ | ✅ |
+| Feature        | Chrome | Firefox | Edge   | Safari |
+| -------------- | ------ | ------- | ------ | ------ |
+| MediaPipe WASM | ✅ 88+ | ✅ 89+  | ✅ 88+ | ⚠️ 15+ |
+| Web Audio API  | ✅     | ✅      | ✅     | ✅     |
+| ES Modules     | ✅     | ✅      | ✅     | ✅     |
+| getUserMedia   | ✅     | ✅      | ✅     | ✅     |
 
 **Note**: Safari has limited MediaPipe support. Chrome/Edge recommended.
 
 ## Development Environment
 
 ### Recommended VS Code Extensions
+
 ```json
 {
   "recommendations": [
@@ -215,6 +227,7 @@ requestAnimationFrame(callback)
 ```
 
 ### Node.js Version
+
 - **Minimum**: Node.js 18.x LTS
 - **Recommended**: Node.js 20.x LTS
 
@@ -227,23 +240,25 @@ requestAnimationFrame(callback)
 
 ## Performance Targets
 
-| Metric | Target | Notes |
-|--------|--------|-------|
-| Hand Tracking FPS | 30+ | Throttled to save CPU |
-| Audio Latency | < 20ms | Web Audio lookahead |
-| Visual FPS | 60 | RequestAnimationFrame |
-| Memory Usage | < 200MB | With ML model loaded |
-| Time to Interactive | < 3s | On decent connection |
+| Metric              | Target  | Notes                 |
+| ------------------- | ------- | --------------------- |
+| Hand Tracking FPS   | 30+     | Throttled to save CPU |
+| Audio Latency       | < 20ms  | Web Audio lookahead   |
+| Visual FPS          | 60      | RequestAnimationFrame |
+| Memory Usage        | < 200MB | With ML model loaded  |
+| Time to Interactive | < 3s    | On decent connection  |
 
 ## Future Considerations
 
 ### Potential Additions
+
 - **WebGPU**: For more complex visualizations
 - **WebMIDI**: Connect to hardware synthesizers
 - **WebRTC**: Multi-user jamming sessions
 - **PWA**: Offline capability
 
 ### Scalability Path
+
 1. Current: Single-page application
 2. Future: Component library for embedding
 3. Advanced: Full DAW-like environment
